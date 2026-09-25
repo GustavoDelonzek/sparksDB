@@ -24,6 +24,8 @@
               : 'text-neutral-400 hover:bg-neutral-800/60'
           "
           @click="tabs.activeTabId = tab.id"
+          @contextmenu.prevent="openTabMenu($event, tab.id)"
+          @mousedown.middle.prevent="tabs.closeTab(tab.id)"
         >
           <TerminalSquare v-if="tab.type === 'query'" :size="13" />
           <Table2 v-else :size="13" />
@@ -36,6 +38,31 @@
           @click="tabs.openQueryTab(connections.activeConnectionId)"
         >
           <Plus :size="13" /> Query
+        </button>
+      </div>
+
+      <div
+        v-if="tabMenu.visible"
+        class="fixed inset-0 z-40"
+        @click="closeTabMenu"
+        @contextmenu.prevent="closeTabMenu"
+      ></div>
+      <div
+        v-if="tabMenu.visible"
+        class="fixed z-50 min-w-[170px] rounded border border-neutral-700 bg-neutral-800 py-1 text-xs shadow-lg"
+        :style="{ top: tabMenu.y + 'px', left: tabMenu.x + 'px' }"
+      >
+        <button
+          class="block w-full px-3 py-1.5 text-left text-neutral-200 hover:bg-neutral-700"
+          @click="closeTabFromMenu"
+        >
+          Fechar aba
+        </button>
+        <button
+          class="block w-full px-3 py-1.5 text-left text-neutral-200 hover:bg-neutral-700"
+          @click="closeAllFromMenu"
+        >
+          Fechar todas as abas
         </button>
       </div>
 
@@ -53,7 +80,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, reactive } from 'vue'
 import { DatabaseZap, Plus, Table2, TerminalSquare, X } from '@lucide/vue'
 import ConnectionManager from './components/ConnectionManager.vue'
 import SchemaTree from './components/SchemaTree.vue'
@@ -64,6 +91,31 @@ import { useTabsStore } from './stores/tabs'
 
 const connections = useConnectionsStore()
 const tabs = useTabsStore()
+
+const tabMenu = reactive({ visible: false, x: 0, y: 0, tabId: null })
+
+function openTabMenu(event, tabId) {
+  const menuWidth = 170
+  const menuHeight = 76
+  tabMenu.x = Math.min(event.clientX, window.innerWidth - menuWidth)
+  tabMenu.y = Math.min(event.clientY, window.innerHeight - menuHeight)
+  tabMenu.tabId = tabId
+  tabMenu.visible = true
+}
+
+function closeTabMenu() {
+  tabMenu.visible = false
+}
+
+function closeTabFromMenu() {
+  tabs.closeTab(tabMenu.tabId)
+  closeTabMenu()
+}
+
+function closeAllFromMenu() {
+  tabs.closeAllTabs()
+  closeTabMenu()
+}
 
 onMounted(() => connections.fetchList())
 </script>
