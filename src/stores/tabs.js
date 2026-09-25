@@ -68,6 +68,10 @@ export const useTabsStore = defineStore('tabs', {
         this.activeTabId = this.tabs.length ? this.tabs[Math.max(0, idx - 1)].id : null
       }
     },
+    closeAllTabs() {
+      this.tabs = []
+      this.activeTabId = null
+    },
     setSql(id, sql) {
       const tab = this.tabs.find((t) => t.id === id)
       if (tab) tab.sql = sql
